@@ -1,5 +1,5 @@
 from queryDB import queryDB
-#from pathClassifier import pathClassifier
+from pathClassifier import pathClassifier
 #from writeDB import writeDB
 # Initialization params
 
@@ -36,3 +36,11 @@ BER_data=queryDB(influxParams)
 print()
 print("Classificant mesures...")
 new_class=pathClassifier(BER_data)
+
+print(new_class);
+
+for i in range (1, len(new_class)+1):
+    print(i,new_class[i])
+
+print(list(new_class.items()))
+

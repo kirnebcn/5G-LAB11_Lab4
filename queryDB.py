@@ -53,4 +53,4 @@ def queryDB(influxParams):
         S = [b["BER"] for b in B]
         dicc_salida[obsId] = S
 
-    return (dicc_salida)
+    return dicc_salida
