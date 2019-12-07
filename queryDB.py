@@ -2,55 +2,62 @@
 # clave obsId y valor ber
 
 from influxdb import InfluxDBClient
+import numpy as np
 
-def queryDB(influxParams):
+def queryDB(influxParams,queryParams):
 
-    # Instancia el objeto InfluxDBClient
+    # 1) Get input data
     host = influxParams['host']
     port = influxParams['port']
     user = influxParams['user']
     password = influxParams['password']
     dbname = influxParams['dbname_monitoring']
 
-    cliente = InfluxDBClient(host, port, user, password, dbname)
+    query = queryParams['query']
+    tag = queryParams['tag']
+    values = queryParams['values']
+    variable = queryParams['variable']
 
-    # consulta = 'SELECT * FROM ber where "obsId"=\'1\''  ... en caso de querer introducir ' en la query
+    # 2) Get BER monitoring data in the desired format for facilitating analysis
+    cliente = InfluxDBClient(host, port, user, password, dbname)    # Instancia el objeto InfluxDBClient
 
     # Obtiene todos los datos de la BD, en la forma de un objeto ResultSet de InfluxDB
-    consulta = 'SELECT * FROM ber'
+    resultado = cliente.query(query)     # objeto ResultSet de InfluxDB, no es un array de diccionarios
 
-    resultado = cliente.query(consulta)     # objeto ResultSet de InfluxDB, no es un array de diccionarios
-
-    medidas = list(resultado.get_points())        # obtenemos una lista de todos los resultados (lista de diccionarios)
-
-    # obtenemos una lista de todas los posibles valores de obsId (valores repetidos) Tamaño 288000 (288000 medidas)
-    lista_obsid = [medida["obsId"] for medida in medidas]
-
-    # Obtenemos una lista con todos los obsId únicos con ayuda del tipo de datos set
-    # Un set sólo almacena un valor determinado una única vez aunque se inserte más veces
-    set_obsid = set(lista_obsid)        # insertamos la lista en el set --> {'96', '12', '83', '17', ..., '34'} Tamaño 100
-    obsid_unicos = list(set_obsid)      # convierte el set a lista --> ['96', '12', '83', '17', ..., '34'] Tamaño 100
-
-    # También se puede hacer con una funcion numpy: unique
-    # import numpy as np
-    # lista_obsid_np = np.array(lista_obsid)
-    # obsid_unicos = np.unique(lista_obsid_np)
-
-    # Pasa los elementos de obsId a un número entero
-    for i in range(len(obsid_unicos)):
-        obsid_unicos[i]=int(obsid_unicos[i])
-
-    obsid_unicos.sort()  # ordena las obsId de menor a mayor
+    medidas = list(resultado.get_points())  # obtenemos una lista de todos los resultados (lista de diccionarios)
+                                            # mediante el método get_points() del objeto ResultSet de InfluxDB
 
     # Recorremos obsid y montamos el diccionario de salida en formato
-    # {1: [7.24313637610657e-05, ...], 2: [7.03297965520217e-05, ...], ...,
-    #  100: [7.24313637610657e-05, ...]}
-
+    # {1: [7.24313637610657e-05, ...], 2: [7.03297965520217e-05, ...], ..., 100: [7.24313637610657e-05, ...]}
     dicc_salida = {}
 
-    for obsId in obsid_unicos:
-        B = list(resultado.get_points(tags={"obsId": str(obsId)}))
-        S = [b["BER"] for b in B]
+    for obsId in values:
+        B = list(resultado.get_points(tags={tag: str(obsId)}))
+        S = [b[variable] for b in B]
         dicc_salida[obsId] = S
 
-    return dicc_salida
+    # 3) Generate monitoring database in JSON file format to facilitate creating visualization data
+    rs = cliente.query(query)
+    J = rs.raw
+    aux = J['series']
+    DB_JSON = []
+    for serie in aux:
+        measurement = serie['name']
+        fields = np.array(serie['columns'])
+        values = serie['values']
+        timePos = int(np.where(fields == 'time')[0])
+        classPos = int(np.where(fields == 'class')[0])
+        idPos = int(np.where(fields == 'obsId')[0])
+        BERpos = int(np.where(fields == 'BER')[0])
+        for value in values:
+            point = {}
+            point["measurement"] = measurement
+            point["tags"] = {}
+            point["tags"]["class"] = value[classPos]
+            point["tags"]["obsId"] = value[idPos]
+            point["time"] = value[timePos]
+            point["fields"] = {}
+            point["fields"]["BER"] = value[BERpos]
+            DB_JSON.append(point)
+
+    return (dicc_salida, DB_JSON)

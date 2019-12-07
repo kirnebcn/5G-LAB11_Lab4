@@ -36,7 +36,7 @@ obsid_unicos = list(set_obsid)      # convierte el set a lista --> ['96', '12', 
 # lista_obsid_np = np.array(lista_obsid)
 # obsid_unicos = np.unique(lista_obsid_np)
 
-# Pasa los elementos de obsId a un número entero
+# Pasa la clave obsId a un número entero
 for i in range(len(obsid_unicos)):
     obsid_unicos[i]=int(obsid_unicos[i])
 
