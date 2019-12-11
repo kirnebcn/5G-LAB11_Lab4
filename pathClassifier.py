@@ -4,12 +4,6 @@ def pathClassifier(medidas_BER):
 
     mida = len(medidas_BER)     # en principio vale 100 (100 obsId)
 
-    '''
-    # Pasa la clave obsId (ahora str) a un número entero
-    for i in range(len(medidas_BER)):
-        medidas_BER[i] = int(medidas_BER[i])
-    '''
-
     # Creamos arrays (listas) vacíos de long n+1, porque el 0 lo dejaremos vacío (obsId comienza en 1 y acaba en 100)
     # De hecho, para el diccionario medidas_BER los índices van de 1 a 100
     media = [0]*(mida+1)
@@ -41,14 +35,14 @@ def pathClassifier(medidas_BER):
 
     # Clasificador
     for i in range(1,mida+1):
-        if (suma_dif[i] > 6e-6):
+        if (suma_dif[i] > 6e-6):                                    # Escalón o incremental
             if (media[i] < mediana[i]):
-                dicc_clases[i] = clase2                         # Escalón
+                dicc_clases[i] = clase2                             # Escalón
             else:
-                dicc_clases[i] = clase4                         # Incremental
-        elif (maximo[i] > 2e-4) or (maximo[i]-minimo[i] > 5e-5):
-            dicc_clases[i] = clase3                             # Picos
+                dicc_clases[i] = clase4                             # Incremental
+        elif (maximo[i] > 2e-4) or (maximo[i]-minimo[i] > 5e-5):    # Picos o normal
+            dicc_clases[i] = clase3                                 # Picos
         else:
-            dicc_clases[i] = clase1                             # Normal
+            dicc_clases[i] = clase1                                 # Normal
 
     return dicc_clases

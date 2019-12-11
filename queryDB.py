@@ -24,16 +24,16 @@ def queryDB(influxParams,queryParams):
     # Obtiene todos los datos de la BD, en la forma de un objeto ResultSet de InfluxDB
     resultado = cliente.query(query)     # objeto ResultSet de InfluxDB, no es un array de diccionarios
 
-    medidas = list(resultado.get_points())  # obtenemos una lista de todos los resultados (lista de diccionarios)
-                                            # mediante el método get_points() del objeto ResultSet de InfluxDB
+    medidas = list(resultado.get_points())  # obtenemos el resultado de la query mediante el método get_points() del
+                                            #  objeto ResultSet de InfluxDB y lo pasamos a lista
 
     # Recorremos obsid y montamos el diccionario de salida en formato
     # {1: [7.24313637610657e-05, ...], 2: [7.03297965520217e-05, ...], ..., 100: [7.24313637610657e-05, ...]}
     dicc_salida = {}
 
     for obsId in values:
-        B = list(resultado.get_points(tags={tag: str(obsId)}))
-        S = [b[variable] for b in B]
+        B = list(resultado.get_points(tags={tag: str(obsId)}))  # formato [name,time,BER,class,obsId] para cada obsId
+        S = [b[variable] for b in B]                            # lista BER Ɐ filas de la BD con obsId = obsId
         dicc_salida[obsId] = S
 
     # 3) Generate monitoring database in JSON file format to facilitate creating visualization data
