@@ -1,7 +1,7 @@
 # Versión para entorno dinámico
 
 from queryDB import queryDB
-from pathClassifier import pathClassifier
+from pathClassifier_dyn import pathClassifier_dyn
 from writeDB import writeDB
 from datetime import date
 from datetime import time
@@ -34,14 +34,14 @@ print()
 initial_date = initial_date.replace(hour=0,minute=0, second=0)
 final_date = final_date.replace(hour=23,minute=59, second=59)
 
-# Pasamos a formato epoch (linux time) y quitamos los milisegundos pasando de float a int
+# Pasamos a formato epoch (linux time) y quitamos los milisegundos (decimales) pasando de float a int
 initial_date_epoch = int(datetime.timestamp(initial_date))
 final_date_epoch = int(datetime.timestamp(final_date))
 
 queryParams={}
+# Variamos la query para tener en cuenta el intervalo temporal. 's' es para especificar epoch en segundos
 queryParams['query'] = 'SELECT * FROM ber WHERE time >= '+str(initial_date_epoch)\
                        +'s AND time <= '+str(final_date_epoch)+'s'
-#queryParams['query'] = 'SELECT * FROM ber'
 queryParams['tag'] = "obsId"
 queryParams['values'] = [(i+1) for i in range(100)]      # Cambio str(i+1) por (i+1) por coherencia con clasificador
 queryParams['variable'] = "BER"
@@ -52,7 +52,7 @@ print("\nLlegint dades de monitorització del",initial_date,"al",final_date,"...
 BER_data,DB_JSON=queryDB(influxParams,queryParams)
 
 print("Classificant mesures...")
-new_class=pathClassifier(BER_data)
+new_class=pathClassifier_dyn(BER_data)
 
 print("Desant BD de visualització...")
 writeDB(influxParams, DB_JSON, new_class)

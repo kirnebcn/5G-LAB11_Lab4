@@ -1,7 +1,6 @@
 import numpy as np  # importando numpy
 
-def pathClassifier(medidas_BER):
-
+def pathClassifier_dyn(medidas_BER):
     mida = len(medidas_BER)  # en principio vale 100 (100 obsId)
 
     # Valores de los parámetros "estándar" de BER
